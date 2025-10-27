@@ -136,6 +136,13 @@ const SendIcon = (props) => (
   </svg>
 );
 
+// --- NEW Mail Icon ---
+const MailIcon = (props) => (
+  <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+  </svg>
+);
+
 
 // --- Header Component (Refined) ---
 const Header = () => {
@@ -150,9 +157,27 @@ const Header = () => {
   return (
     <header className="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
       <nav className="container mx-auto px-6 py-5 flex justify-between items-center">
-        <a href="#" className="text-2xl font-bold text-indigo-900">
-          Mohammed
-        </a>
+        <div className="flex items-center space-x-4">
+          <a href="#" className="text-2xl font-bold text-indigo-900">
+            Mohammed
+          </a>
+          <a 
+            href="mailto:apexweb.consulting@outlook.com" 
+            className="text-gray-600 hover:text-indigo-700 transition duration-300"
+            aria-label="Email Mohammed"
+          >
+            <MailIcon className="w-5 h-5" />
+          </a>
+          <a 
+            href="https://www.linkedin.com/in/mohammed-moheen-b2a668390/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-gray-600 hover:text-indigo-700 transition duration-300"
+            aria-label="LinkedIn Profile"
+          >
+            <LinkedInIcon className="w-5 h-5" />
+          </a>
+        </div>
         
         {/* Desktop Nav */}
         <div className="hidden md:flex space-x-10">
@@ -204,24 +229,46 @@ const Header = () => {
   );
 };
 
-// --- Hero Component (NEW DESIGN) ---
+// --- Hero Component (VIDEO BACKGROUND) ---
 const Hero = () => {
+  // The video URL provided by the user
+  const videoUrl = 'https://res.cloudinary.com/dkuyjnoae/video/upload/v1761569464/Diverse_Small_Businesses_Thriving_Online_gyjrvn.mp4';
+  
+  // Removed Parallax state and effect
+  // const [offsetY, setOffsetY] = useState(0);
+  // const handleScroll = () => setOffsetY(window.pageYOffset);
+  // useEffect(() => { ... }, []);
+
   return (
-    <section id="hero" className="relative text-black pt-48 pb-32 md:pt-64 md:pb-48 bg-gray-50 overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        {/* Subtle gradient mesh */}
-        <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-blue-50/50 via-indigo-50/50 to-transparent opacity-50 blur-3xl"></div>
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-indigo-50/50 via-blue-50/50 to-transparent opacity-50 blur-3xl"></div>
-      </div>
+    <section id="hero" className="relative pt-48 pb-32 md:pt-64 md:pb-48 text-white overflow-hidden">
       
-      <div className="container mx-auto px-6 text-left relative z-10 max-w-5xl">
-        <h1 className="text-5xl md:text-8xl font-black mb-6 text-indigo-900 leading-tight scroll-animate">
+      {/* Background Container - REMOVED parallax style */}
+      <div className="absolute z-0 top-0 left-0 w-full h-full">
+        {/* Background Video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline // Ensures playback on mobile devices
+          className="absolute top-0 left-0 w-full h-full object-cover filter blur-md" // blur-md is 12px
+          src={videoUrl}
+        >
+          Your browser does not support the video tag.
+        </video>
+        
+        {/* Dimming Overlay */}
+        <div className="absolute inset-0 bg-black/60"></div> {/* Dimmed overlay */}
+      </div>
+
+      {/* Text Content */}
+      <div className="container mx-auto px-6 relative z-20 text-center"> {/* z-20 keeps it on top */}
+        <h1 className="text-4xl md:text-6xl font-black mb-4 leading-tight text-white scroll-animate">
           Web Consultant.
           <br />
           Problem Solver.
         </h1>
-        <p className="text-xl md:text-2xl text-gray-700 font-light max-w-2xl scroll-animate delay-1">
-          I'm Mohammed, a business-minded partner who builds reliable, high-performance websites that solve real problems.
+        <p className="text-lg md:text-xl text-gray-200 font-light max-w-xl mx-auto mb-8 scroll-animate delay-1">
+          I'm Mohammed Moheen, founder of Apex Web Co. I help US businesses fix their outdated, slow websites and turn them into assets that attract customers and build trust.
         </p>
         <a
           href="#projects"
@@ -474,9 +521,10 @@ Rules:
 };
 
 
-// --- About Component (NEW DESIGN) ---
+// --- About Component (Sticky) ---
 const About = ({ onOpenAiModal }) => (
-  <section id="about" className="py-24 md:py-40 bg-white">
+  // REMOVED id="about" from here. Added sticky, top-0, and z-10. Header is z-50 so this will stick *under* it.
+  <section className="py-24 md:py-40 bg-white sticky top-0 z-10">
     <div className="container mx-auto px-6 max-w-6xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center">
         {/* Left Column: Narrative */}
@@ -533,28 +581,25 @@ const About = ({ onOpenAiModal }) => (
 // --- Projects Component (NEW DESIGN) ---
 const projects = [
   {
-    title: 'Project Title 1',
-    description: 'A brief description of the project, what it does, and the technologies used. I focused on creating a blazingly fast user experience with a clean, modern design.',
-    imageUrl: 'https://placehold.co/600x450/1a237e/ffffff?text=Project+1',
-    liveUrl: '#',
-    githubUrl: '#',
-    tags: ['React', 'Tailwind', 'Firebase']
+    title: 'Harbour Property Group',
+    description: 'Designed and built a client-focused website for Harbour Property Group, specialists in making UK property investment easy and accessible for international investors.',
+    imageUrl: 'https://i.postimg.cc/HWQNDkXt/Screenshot-2025-10-27-173118.png',
+    liveUrl: 'https://harbour.weblexia.in',
+    tags: ['Web Design', 'WordPress', 'Investment']
   },
   {
-    title: 'Project Title 2',
-    description: 'This project involved complex e-commerce integration with Stripe. The main challenge was ensuring secure, seamless transactions and a robust backend.',
-    imageUrl: 'https://placehold.co/600x450/1a237e/ffffff?text=Project+2',
-    liveUrl: '#',
-    githubUrl: '#',
-    tags: ['Next.js', 'Stripe', 'GraphQL']
+    title: 'PLNR Personal Finances',
+    description: 'Built the digital presence for PLNR, a completely independent, fee-only financial advisor in India. The website highlights their commitment to unbiased advice, offering a full suite of personal finance services without generating commissions or referral fees.',
+    imageUrl: 'https://i.postimg.cc/HLmwMX6y/Screenshot-2025-10-27-174809.png',
+    liveUrl: 'https://plnr.in/',
+    tags: ['Web Design', 'Finance', 'Consulting']
   },
   {
-    title: 'Project Title 3',
-    description: 'A full-stack application built with Vue.js and a Node.js backend. This demonstrates my ability to handle both front-end and back-end logic.',
-    imageUrl: 'https://placehold.co/600x450/1a237e/ffffff?text=Project+3',
-    liveUrl: '#',
-    githubUrl: '#',
-    tags: ['Vue.js', 'Node.js', 'MongoDB']
+    title: 'ZAMZAM Cars',
+    description: 'Developed the digital storefront for Zam Zam Cars, a trusted provider of quality, multi-city car rental services in India, featuring a comprehensive fleet of luxury and standard vehicles for corporate and personal travel.',
+    imageUrl: 'https://i.postimg.cc/02xKcPY8/Screenshot-2025-10-27-174832.png',
+    liveUrl: 'https://zamzamcars.in/',
+    tags: ['Web Development', 'Rental Service', 'Digital Storefront']
   },
 ];
 
@@ -588,17 +633,12 @@ const ProjectCard = ({ project, index }) => {
         <div className="flex flex-wrap gap-4">
           <a 
             href={project.liveUrl}
+            target="_blank" 
+            rel="noopener noreferrer"
             className="inline-flex items-center text-white bg-indigo-700 hover:bg-indigo-800 py-3 px-6 rounded-full font-medium transition duration-300"
           >
             Live Demo
             <ArrowRightIcon className="w-5 h-5 ml-2" />
-          </a>
-          <a 
-            href={project.githubUrl}
-            className="inline-flex items-center text-gray-700 hover:text-indigo-700 py-3 px-6 rounded-full font-medium transition duration-300 border border-gray-300 hover:border-indigo-700"
-          >
-            GitHub
-            <GithubIcon className="w-5 h-5 ml-2" />
           </a>
         </div>
       </div>
@@ -608,7 +648,8 @@ const ProjectCard = ({ project, index }) => {
 
 // NEW Projects Section
 const Projects = () => (
-  <section id="projects" className="py-24 md:py-40 bg-gray-50">
+  // Added relative and z-20 to slide *over* the sticky About section
+  <section id="projects" className="py-24 md:py-40 bg-gray-50 relative z-20">
     <div className="container mx-auto px-6 max-w-6xl">
       <h2 className="text-4xl md:text-5xl font-bold text-center text-indigo-900 mb-20 md:mb-32 scroll-animate">
         Featured Projects
@@ -624,14 +665,15 @@ const Projects = () => (
 
 // --- Contact Component (NEW DESIGN) ---
 const Contact = () => (
-  <section id="contact" className="text-white py-24 md:py-40 bg-[linear-gradient(135deg,_#000033,_#1a237e)]">
+  // Added relative and z-30 to slide over the Projects section
+  <section id="contact" className="text-white py-24 md:py-40 bg-[linear-gradient(135deg,_#000033,_#1a237e)] relative z-30">
     <div className="container mx-auto px-6 text-center max-w-3xl scroll-animate">
       <h2 className="text-4xl md:text-5xl font-bold mb-6">Let's build something.</h2>
       <p className="text-xl md:text-2xl text-gray-200 mb-12 font-light">
         Tired of agencies that don't get it? I'm ready to be the reliable partner you're looking for.
       </p>
       <a
-        href="mailto:your.email@example.com"
+        href="mailto:apexweb.consulting@outlook.com"
         className="inline-block bg-white text-indigo-900 font-bold py-4 px-12 rounded-full shadow-2xl hover:bg-gray-100 transition duration-300 transform hover:scale-105 text-lg"
       >
         Say Hello
@@ -642,16 +684,20 @@ const Contact = () => (
 
 // --- Footer Component (Refined) ---
 const Footer = () => (
-  <footer className="bg-white text-gray-600 py-16">
+  // Added relative and z-30
+  <footer className="bg-white text-gray-600 py-16 relative z-30">
     <div className="container mx-auto px-6 text-center md:flex md:justify-between md:items-center max-w-6xl">
        <div className="text-lg font-bold text-indigo-900 mb-4 md:mb-0">
          Mohammed
        </div>
       <div className="flex justify-center space-x-8 mb-4 md:mb-0">
-        <a href="#" className="hover:text-indigo-700 transition duration-300" aria-label="GitHub">
-          <GithubIcon className="w-6 h-6" />
-        </a>
-        <a href="#" className="hover:text-indigo-700 transition duration-300" aria-label="LinkedIn">
+        <a 
+          href="https://www.linkedin.com/in/mohammed-moheen-b2a668390/" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="hover:text-indigo-700 transition duration-300" 
+          aria-label="LinkedIn"
+        >
           <LinkedInIcon className="w-6 h-6" />
         </a>
       </div>
@@ -674,9 +720,15 @@ export default function App() {
       <Header />
       <main>
         <Hero />
-        <About onOpenAiModal={() => setIsAiModalOpen(true)} />
-        <Projects />
-        <Contact />
+        {/* Wrap sticky sections in a relative div to manage z-index context */}
+        <div className="relative">
+          {/* Add a new div with the ID for the anchor link to target */}
+          <div id="about" className="relative pt-1"> 
+            <About onOpenAiModal={() => setIsAiModalOpen(true)} />
+          </div>
+          <Projects />
+          <Contact />
+        </div>
       </main>
       <Footer />
       
@@ -688,3 +740,5 @@ export default function App() {
     </>
   );
 }
+
+
