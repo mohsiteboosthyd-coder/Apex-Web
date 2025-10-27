@@ -1396,4 +1396,7 @@ export default function App() {
 
   );
 
+export default function App() {
+  // ... all your component code inside ...
 }
+
