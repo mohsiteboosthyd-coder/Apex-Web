@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-domclient';
+import ReactDOM from 'react-dom/client';
 import './style.css'; // This imports your Tailwind CSS
 import App from '.App';
 
@@ -9,5 +9,6 @@ root.render(
     <App /> 
   React.StrictMode
 );
+
 
 
