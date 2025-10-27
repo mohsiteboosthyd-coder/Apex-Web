@@ -229,20 +229,15 @@ const Header = () => {
   );
 };
 
-// --- Hero Component (VIDEO BACKGROUND) ---
+// --- Hero Component (GLASSMORPHISM) ---
 const Hero = () => {
   // The video URL provided by the user
   const videoUrl = 'https://res.cloudinary.com/dkuyjnoae/video/upload/v1761569464/Diverse_Small_Businesses_Thriving_Online_gyjrvn.mp4';
-  
-  // Removed Parallax state and effect
-  // const [offsetY, setOffsetY] = useState(0);
-  // const handleScroll = () => setOffsetY(window.pageYOffset);
-  // useEffect(() => { ... }, []);
 
   return (
-    <section id="hero" className="relative pt-48 pb-32 md:pt-64 md:pb-48 text-white overflow-hidden">
+    <section id="hero" className="relative h-screen flex items-center justify-center text-white overflow-hidden">
       
-      {/* Background Container - REMOVED parallax style */}
+      {/* Background Container */}
       <div className="absolute z-0 top-0 left-0 w-full h-full">
         {/* Background Video */}
         <video
@@ -250,32 +245,35 @@ const Hero = () => {
           loop
           muted
           playsInline // Ensures playback on mobile devices
-          className="absolute top-0 left-0 w-full h-full object-cover filter blur-md" // blur-md is 12px
+          className="absolute top-0 left-0 w-full h-full object-cover filter blur-sm" // Reduced blur to blur-sm (4px)
           src={videoUrl}
         >
           Your browser does not support the video tag.
         </video>
         
         {/* Dimming Overlay */}
-        <div className="absolute inset-0 bg-black/60"></div> {/* Dimmed overlay */}
+        <div className="absolute inset-0 bg-black/50"></div> {/* Slightly less dim */}
       </div>
 
-      {/* Text Content */}
-      <div className="container mx-auto px-6 relative z-20 text-center"> {/* z-20 keeps it on top */}
-        <h1 className="text-4xl md:text-6xl font-black mb-4 leading-tight text-white scroll-animate">
-          Web Consultant.
-          <br />
-          Problem Solver.
-        </h1>
-        <p className="text-lg md:text-xl text-gray-200 font-light max-w-xl mx-auto mb-8 scroll-animate delay-1">
-          I'm Mohammed Moheen, founder of Apex Web Co. I help US businesses fix their outdated, slow websites and turn them into assets that attract customers and build trust.
-        </p>
-        <a
-          href="#projects"
-          className="mt-12 inline-block bg-indigo-700 text-white font-bold py-4 px-12 rounded-full shadow-xl hover:bg-indigo-800 transition duration-300 transform hover:scale-105 scroll-animate delay-2"
-        >
-          View My Work
-        </a>
+      {/* Glassmorphism Content Box */}
+      <div className="container mx-auto px-6 relative z-20 flex items-center justify-center">
+        {/* The Glass Pane */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-xl shadow-lg border border-white/20 p-8 md:p-12 text-center max-w-2xl">
+          <h1 className="text-4xl md:text-6xl font-black mb-4 leading-tight text-white scroll-animate">
+            Web Consultant.
+            <br />
+            Problem Solver.
+          </h1>
+          <p className="text-lg md:text-xl text-gray-200 font-light max-w-xl mx-auto mb-8 scroll-animate delay-1">
+            I'm Mohammed Moheen, founder of Apex Web Co. I help US businesses fix their outdated, slow websites and turn them into assets that attract customers and build trust.
+          </p>
+          <a
+            href="#projects"
+            className="mt-8 inline-block bg-indigo-700 text-white font-bold py-4 px-12 rounded-full shadow-xl hover:bg-indigo-800 transition duration-300 transform hover:scale-105 scroll-animate delay-2"
+          >
+            View My Work
+          </a>
+        </div>
       </div>
     </section>
   );
@@ -740,5 +738,4 @@ export default function App() {
     </>
   );
 }
-
 
