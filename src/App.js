@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 
-
+import App from './App';
 // --- Global Styles ---
 
 // We inject these styles into the document head
@@ -1399,4 +1399,5 @@ export default function App() {
 export default function App() {
   // ... all your component code inside ...
 }
+
 
