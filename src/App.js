@@ -14,6 +14,7 @@ const GlobalStyles = () => {
         color: #111827; /* Dark text */
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden; /* Prevent potential horizontal scroll */
       }
       
       html {
@@ -45,37 +46,60 @@ const GlobalStyles = () => {
   return null;
 };
 
-// --- Custom Hook for Scroll Animation ---
-const useScrollAnimation = () => {
+// --- Custom Hook for Scroll Animation (Updated) ---
+const useScrollAnimation = (page) => { // Accept page as dependency
   useEffect(() => {
-    const targets = document.querySelectorAll('.scroll-animate');
-    
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('scroll-animate-visible');
-            observer.unobserve(entry.target);
+    // Function to set up the observer
+    const setupObserver = () => {
+      const targets = document.querySelectorAll('.scroll-animate');
+      
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('scroll-animate-visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          threshold: 0.1, 
+          rootMargin: '0px 0px -50px 0px', 
+        }
+      );
+  
+      targets.forEach((target) => {
+        // Reset animation state before observing if needed (optional)
+        // target.classList.remove('scroll-animate-visible'); 
+        observer.observe(target);
+      });
+  
+      // Return cleanup function for this observer instance
+      return () => {
+        targets.forEach((target) => {
+          if(observer && target) { // Add checks
+            observer.unobserve(target);
           }
         });
-      },
-      {
-        threshold: 0.1, // Trigger when 10% is visible
-        rootMargin: '0px 0px -50px 0px', // Start animation a bit before it's fully in view
-      }
-    );
-
-    targets.forEach((target) => {
-      observer.observe(target);
-    });
-
-    return () => {
-      targets.forEach((target) => {
-        observer.unobserve(target);
-      });
+      };
     };
-  }, []);
+
+    // Run setup slightly delayed to allow DOM update after page change
+    let currentCleanup = () => {}; // Initialize cleanup function ref
+    const timeoutId = setTimeout(() => {
+        currentCleanup = setupObserver();
+    }, 100); 
+
+
+    // Cleanup function for the effect
+    return () => {
+      clearTimeout(timeoutId); // Clear the timeout if effect re-runs before timeout fires
+      currentCleanup(); // Run the cleanup from the observer setup
+    };
+
+  }, [page]); // Re-run the effect when the page state changes
 };
+
 
 // --- SVG Icons ---
 // Using inline SVGs for performance and easy styling
@@ -108,6 +132,14 @@ const ArrowRightIcon = (props) => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
   </svg>
 );
+
+// --- NEW Arrow Left Icon ---
+const ArrowLeftIcon = (props) => (
+  <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
+  </svg>
+);
+
 
 const SparkleIcon = (props) => (
   <svg
@@ -144,26 +176,100 @@ const MailIcon = (props) => (
 );
 
 
-// --- Header Component (Refined) ---
-const Header = () => {
+// --- Header Component (Refined with Glassmorphism & Scroll Effect) ---
+const Header = ({ setPage, page }) => { // Added page prop
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false); // State to track scroll
+  const [isOnTop, setIsOnTop] = useState(true); // State to track if at very top
 
   const navLinks = [
     { name: 'About', href: '#about' },
-    { name: 'Projects', href: '#projects' },
+    { name: 'Projects', href: '#projects-target' }, // Target for all projects page
     { name: 'Contact', href: '#contact' },
   ];
 
+  // Effect to handle scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if user is at the very top
+      setIsOnTop(window.scrollY < 50); // Small threshold
+
+      // Check if user has scrolled past the viewport height (hero section height)
+      if (window.scrollY > window.innerHeight * 0.9) { // Trigger slightly before full scroll
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    // Run once initially
+    handleScroll();
+
+    window.addEventListener('scroll', handleScroll);
+
+    // Cleanup listener on component unmount
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []); // Empty dependency array ensures this runs only once on mount
+
+  const handleNavLinkClick = (e, linkName, href) => {
+    e.preventDefault(); // Prevent default anchor jump
+
+    // Special case for Projects link
+    if (linkName === 'Projects') {
+      setPage('all-projects');
+      setIsMobileMenuOpen(false); // Close mobile menu
+      return; // Stop further execution for this link
+    }
+    
+    // Function to scroll to the element
+    const scrollToElement = () => {
+      // Use querySelector for ID selectors
+      const targetElement = document.querySelector(href); 
+      if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth' });
+      } else {
+          // Fallback or scroll to top if target doesn't exist (e.g., #hero)
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    // If already on home page, scroll immediately
+    if (page === 'home') {
+      scrollToElement();
+    } else {
+      // If on 'all-projects' page, switch back to home first, then scroll
+      setPage('home'); 
+      // Use timeout to allow state update and re-render before scrolling
+      setTimeout(scrollToElement, 50); // Small delay might be needed
+    }
+
+    setIsMobileMenuOpen(false); // Close mobile menu if open
+  };
+
+  // Determine header background based on scroll and page state
+  const isGlass = page === 'home' && isOnTop; // Only glass if home page AND at the top
+
   return (
-    <header className="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
+    // Conditionally apply background and border styles based on scroll state and page
+    <header className={`
+      fixed top-0 left-0 right-0 z-50 shadow-lg 
+      transition-colors duration-300 ease-in-out 
+      ${isGlass 
+        ? 'bg-white/10 backdrop-blur-lg border-b border-white/20' // Glass effect
+        : 'bg-[#1a237e]' // Solid blue otherwise
+      }
+    `}>
       <nav className="container mx-auto px-6 py-5 flex justify-between items-center">
         <div className="flex items-center space-x-4">
-          <a href="#" className="text-2xl font-bold text-indigo-900">
+          {/* Text/icons remain white in both states */}
+          <a href="#" onClick={(e) => handleNavLinkClick(e, 'Home', '#hero')} className="text-2xl font-bold text-white">
             Mohammed
           </a>
           <a 
             href="mailto:apexweb.consulting@outlook.com" 
-            className="text-gray-600 hover:text-indigo-700 transition duration-300"
+            className="text-white hover:text-gray-200 transition duration-300"
             aria-label="Email Mohammed"
           >
             <MailIcon className="w-5 h-5" />
@@ -172,7 +278,7 @@ const Header = () => {
             href="https://www.linkedin.com/in/mohammed-moheen-b2a668390/" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="text-gray-600 hover:text-indigo-700 transition duration-300"
+            className="text-white hover:text-gray-200 transition duration-300"
             aria-label="LinkedIn Profile"
           >
             <LinkedInIcon className="w-5 h-5" />
@@ -185,7 +291,8 @@ const Header = () => {
             <a
               key={link.name}
               href={link.href}
-              className="text-gray-700 hover:text-indigo-700 transition duration-300 text-sm font-medium"
+              onClick={(e) => handleNavLinkClick(e, link.name, link.href)} // Pass link name
+              className="text-white hover:text-gray-200 transition duration-300 text-sm font-medium" // Keep text white
             >
               {link.name}
             </a>
@@ -195,7 +302,7 @@ const Header = () => {
         {/* Mobile Menu Button */}
         <button
           id="mobile-menu-btn"
-          className="md:hidden text-indigo-900 z-50"
+          className="md:hidden text-white z-50" // Keep button white
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           {isMobileMenuOpen ? (
@@ -217,17 +324,18 @@ const Header = () => {
             <a
               key={link.name}
               href={link.href}
+              onClick={(e) => handleNavLinkClick(e, link.name, link.href)} // Pass link name
               className="text-3xl text-gray-800 hover:text-indigo-700 transition duration-300"
-              onClick={() => setIsMobileMenuOpen(false)} // Close menu on click
             >
               {link.name}
             </a>
           ))}
         </div>
       </div>
-    </header>
+    </header> 
   );
 };
+
 
 // --- Hero Component (GLASSMORPHISM) ---
 const Hero = () => {
@@ -268,7 +376,7 @@ const Hero = () => {
             I'm Mohammed Moheen, founder of Apex Web Co. I help US businesses fix their outdated, slow websites and turn them into assets that attract customers and build trust.
           </p>
           <a
-            href="#projects"
+            href="#projects-target" // Link to featured projects section
             className="mt-8 inline-block bg-indigo-700 text-white font-bold py-4 px-12 rounded-full shadow-xl hover:bg-indigo-800 transition duration-300 transform hover:scale-105 scroll-animate delay-2"
           >
             View My Work
@@ -348,10 +456,12 @@ Rules:
 - Start the conversation by introducing yourself and offering help.
 `;
 
+  // UPDATED: This now calls our own serverless function
   const callGeminiAPI = async (chatHistory) => {
     setIsLoading(true);
-    const apiKey = ""; // API key will be injected by the environment
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+    // This is our Netlify function's endpoint, not the Google API
+    const apiUrl = '/api/gemini';
 
     const payload = {
       contents: chatHistory,
@@ -360,31 +470,35 @@ Rules:
       },
     };
 
-    let response;
     let retries = 3;
     let delay = 1000;
 
     for (let i = 0; i < retries; i++) {
       try {
-        response = await fetch(apiUrl, {
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
 
         if (response.ok) {
-          const result = await response.json();
+          const result = await response.json(); // This is the response from *our* function
           const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
           
           if (text) {
             return { role: 'model', parts: [{ text }] };
           } else {
-            throw new Error('Invalid response structure from API.');
+            // Check for a block reason, which is a valid response
+            if (result.candidates?.[0]?.finishReason === 'SAFETY') {
+              return { role: 'model', parts: [{ text: "I'm sorry, I can't provide a response to that topic." }] };
+            }
+            throw new Error('Invalid response structure from API function.');
           }
         } else {
-          throw new Error(`API request failed with status ${response.status}`);
+          throw new Error(`API function request failed with status ${response.status}`);
         }
       } catch (error) {
+        console.error('Error calling Gemini API function:', error);
         if (i === retries - 1) {
           return {
             role: 'model',
@@ -576,37 +690,59 @@ const About = ({ onOpenAiModal }) => (
   </section>
 );
 
-// --- Projects Component (NEW DESIGN) ---
-const projects = [
-  {
-    title: 'Harbour Property Group',
-    description: 'Designed and built a client-focused website for Harbour Property Group, specialists in making UK property investment easy and accessible for international investors.',
-    imageUrl: 'https://i.postimg.cc/HWQNDkXt/Screenshot-2025-10-27-173118.png',
-    liveUrl: 'https://harbour.weblexia.in',
-    tags: ['Web Design', 'WordPress', 'Investment']
-  },
-  {
-    title: 'PLNR Personal Finances',
-    description: 'Built the digital presence for PLNR, a completely independent, fee-only financial advisor in India. The website highlights their commitment to unbiased advice, offering a full suite of personal finance services without generating commissions or referral fees.',
-    imageUrl: 'https://i.postimg.cc/HLmwMX6y/Screenshot-2025-10-27-174809.png',
-    liveUrl: 'https://plnr.in/',
-    tags: ['Web Design', 'Finance', 'Consulting']
-  },
-  {
-    title: 'ZAMZAM Cars',
-    description: 'Developed the digital storefront for Zam Zam Cars, a trusted provider of quality, multi-city car rental services in India, featuring a comprehensive fleet of luxury and standard vehicles for corporate and personal travel.',
-    imageUrl: 'https://i.postimg.cc/02xKcPY8/Screenshot-2025-10-27-174832.png',
-    liveUrl: 'https://zamzamcars.in/',
-    tags: ['Web Development', 'Rental Service', 'Digital Storefront']
-  },
-];
+// --- All Projects Data ---
+const allProjectsData = [
+    {
+      title: 'Harbour Property Group',
+      description: 'Designed and built a client-focused website for Harbour Property Group, specialists in making UK property investment easy and accessible for international investors.',
+      imageUrl: 'https://i.postimg.cc/HWQNDkXt/Screenshot-2025-10-27-173118.png',
+      liveUrl: 'https://harbour.weblexia.in',
+      tags: ['Web Design', 'WordPress', 'Investment']
+    },
+    {
+      title: 'PLNR Personal Finances',
+      description: 'Built the digital presence for PLNR, a completely independent, fee-only financial advisor in India. The website highlights their commitment to unbiased advice, offering a full suite of personal finance services without generating commissions or referral fees.',
+      imageUrl: 'https://i.postimg.cc/HLmwMX6y/Screenshot-2025-10-27-174809.png',
+      liveUrl: 'https://plnr.in/',
+      tags: ['Web Design', 'Finance', 'Consulting']
+    },
+    {
+      title: 'ZAMZAM Cars',
+      description: 'Developed the digital storefront for Zam Zam Cars, a trusted provider of quality, multi-city car rental services in India, featuring a comprehensive fleet of luxury and standard vehicles for corporate and personal travel.',
+      imageUrl: 'https://i.postimg.cc/02xKcPY8/Screenshot-2025-10-27-174832.png',
+      liveUrl: 'https://zamzamcars.in/',
+      tags: ['Web Development', 'Rental Service', 'Digital Storefront']
+    },
+    {
+      title: 'Carrerfour Supermarket',
+      description: 'A promotional Italian-language website for Carrefour, showcasing the supermarket\'s commitment to quality, convenience, and a wide range of house brands for daily shopping.',
+      imageUrl: 'https://i.postimg.cc/QCyb0WQW/Screenshot-2025-10-29-142044.png',
+      liveUrl: 'https://carrerfour.weblexia.in/', // Added URL
+      tags: ['Web Design', 'Supermarket', 'Promotion']
+    },
+    {
+      title: 'LSS',
+      description: 'A German-language site specializing in the curation and trade of high-quality facsimiles and historical library registers, dedicated to preserving and making accessible the heritage of rare manuscripts for collectors and institutions worldwide.',
+      imageUrl: 'https://i.postimg.cc/KvCfTBcH/Screenshot-2025-10-29-142058.png',
+      liveUrl: 'https://digitalama.weblexia.in/#about', // Added URL
+      tags: ['Web Design', 'Manuscripts', 'German']
+    },
+    {
+      title: 'BIITS (B-Informative IT Services)',
+      description: 'A professional website for BIITS (B-Informative IT Services), an award-winning Business Intelligence and Digital Consulting company, offering services like Data Warehousing, Data Integration, Advanced Analytics, and Software Development.',
+      imageUrl: 'https://i.postimg.cc/P5Z4QJP3/Screenshot-2025-10-29-142105.png',
+      liveUrl: 'https://biits.weblexia.in/', // Added URL
+      tags: ['Web Development', 'Business Intelligence', 'Consulting']
+    },
+  ];
 
-// NEW ProjectCard
+// --- Project Card Component (Reusable) ---
 const ProjectCard = ({ project, index }) => {
   const isOdd = index % 2 !== 0;
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center scroll-animate ${index > 0 ? 'mt-20 md:mt-32' : ''}`}>
+    // Added scroll-animate class for animations on the All Projects page too
+    <div className={`grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center scroll-animate ${index > 0 ? 'mt-16 md:mt-24' : ''}`}>
       {/* Image Column */}
       <div className={`rounded-lg overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-500 ${isOdd ? 'md:order-2' : ''}`}>
         <img 
@@ -629,36 +765,76 @@ const ProjectCard = ({ project, index }) => {
           ))}
         </div>
         <div className="flex flex-wrap gap-4">
-          <a 
-            href={project.liveUrl}
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center text-white bg-indigo-700 hover:bg-indigo-800 py-3 px-6 rounded-full font-medium transition duration-300"
-          >
-            Live Demo
-            <ArrowRightIcon className="w-5 h-5 ml-2" />
-          </a>
+          {project.liveUrl && project.liveUrl !== '#' && ( // Only show button if URL exists and is not '#'
+            <a 
+              href={project.liveUrl}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-white bg-indigo-700 hover:bg-indigo-800 py-3 px-6 rounded-full font-medium transition duration-300"
+            >
+              Live Demo
+              <ArrowRightIcon className="w-5 h-5 ml-2" />
+            </a>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-// NEW Projects Section
-const Projects = () => (
-  // Added relative and z-20 to slide *over* the sticky About section
-  <section id="projects" className="py-24 md:py-40 bg-gray-50 relative z-20">
+// --- Featured Projects Section (Shows only first 3) ---
+const FeaturedProjects = ({ setPage }) => ( 
+  // Changed ID slightly so header link doesn't conflict
+  <section id="projects-target" className="py-24 md:py-40 bg-gray-50 relative z-20"> 
     <div className="container mx-auto px-6 max-w-6xl">
       <h2 className="text-4xl md:text-5xl font-bold text-center text-indigo-900 mb-20 md:mb-32 scroll-animate">
         Featured Projects
       </h2>
       <div className="space-y-16">
-        {projects.map((project, index) => (
+        {/* Slice the array to show only the first 3 projects */}
+        {allProjectsData.slice(0, 3).map((project, index) => (
           <ProjectCard key={project.title} project={project} index={index} />
         ))}
       </div>
-    </div>
-  </section>
+      {/* View More Button */}
+      <div className="text-center mt-20 md:mt-24 scroll-animate delay-3">
+          <button
+            onClick={() => setPage('all-projects')}
+            className="inline-flex items-center text-indigo-700 hover:text-white border border-indigo-700 hover:bg-indigo-800 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-full text-lg px-8 py-3 text-center transition duration-300"
+          >
+            View More Projects
+            <ArrowRightIcon className="w-5 h-5 ml-2" />
+          </button>
+      </div>
+    </div> {/* This closing div was missing */}
+  </section> 
+); // Fixed: Added closing parenthesis
+
+// --- NEW All Projects Page Component ---
+const AllProjectsPage = ({ setPage }) => (
+    <section id="all-projects" className="py-32 md:py-40 bg-gray-50"> {/* Added padding top */}
+        <div className="container mx-auto px-6 max-w-6xl">
+             {/* Back Button */}
+            <div className="mb-12 md:mb-16">
+                <button
+                    onClick={() => setPage('home')}
+                    className="inline-flex items-center text-indigo-700 hover:text-indigo-900 font-medium transition duration-300 group"
+                >
+                    <ArrowLeftIcon className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:-translate-x-1" />
+                    Back to Home
+                </button>
+            </div>
+
+            <h2 className="text-4xl md:text-5xl font-bold text-center text-indigo-900 mb-20 md:mb-32 scroll-animate">
+                All Projects
+            </h2>
+            <div className="space-y-16">
+                {allProjectsData.map((project, index) => (
+                    <ProjectCard key={project.title} project={project} index={index} />
+                ))}
+            </div>
+        </div>
+    </section>
 );
 
 // --- Contact Component (NEW DESIGN) ---
@@ -706,28 +882,50 @@ const Footer = () => (
 
 // --- Main App Component ---
 export default function App() {
-  // Activate scroll animation hook
-  useScrollAnimation();
+  // State for current page view
+  const [page, setPage] = useState('home'); // 'home' or 'all-projects'
+  
+  // Activate scroll animation hook, pass page as dependency
+  useScrollAnimation(page); 
 
   // State for AI Modal
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [page]);
+
+
   return (
     <>
       <GlobalStyles />
-      <Header />
-      <main>
-        <Hero />
-        {/* Wrap sticky sections in a relative div to manage z-index context */}
-        <div className="relative">
-          {/* Add a new div with the ID for the anchor link to target */}
-          <div id="about" className="relative pt-1"> 
-            <About onOpenAiModal={() => setIsAiModalOpen(true)} />
+      {/* Pass setPage and page to Header */}
+      <Header setPage={setPage} page={page}/> 
+      
+      {page === 'home' ? (
+        <main>
+          <Hero />
+          {/* Wrap sticky sections in a relative div to manage z-index context */}
+          <div className="relative">
+            {/* Add a new div with the ID for the anchor link to target */}
+            <div id="about" className="relative pt-1"> 
+              <About onOpenAiModal={() => setIsAiModalOpen(true)} />
+            </div>
+            {/* Pass setPage */}
+            <FeaturedProjects setPage={setPage} /> 
+            <div id="contact" className="relative"> {/* Added target div for contact */}
+              <Contact />
+            </div>
           </div>
-          <Projects />
-          <Contact />
-        </div>
-      </main>
+        </main>
+      ) : (
+        <main>
+            {/* Pass setPage */}
+            <AllProjectsPage setPage={setPage} /> 
+        </main>
+      )}
+
       <Footer />
       
       {/* Render AI Modal */}
@@ -738,4 +936,5 @@ export default function App() {
     </>
   );
 }
+
 
