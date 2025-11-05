@@ -693,6 +693,13 @@ const About = ({ onOpenAiModal }) => (
 // --- All Projects Data ---
 const allProjectsData = [
     {
+      title: 'Trevorz Barber Shop',
+      description: 'A No #1 Barber Shop in their city.',
+      imageUrl: 'https://i.postimg.cc/C5bSyLMF/Screenshot-2025-11-06-010530.png',
+      liveUrl: 'https://www.behance.net/gallery/235882623/Barbershop-Website-Exclusive-Mens-SPA?tracking_source=search_projects|barber+website&l=4',
+      tags: ['Web Design', 'Behance', 'Barber Shop']
+    },
+    {
       title: 'Harbour Property Group',
       description: 'Designed and built a client-focused website for Harbour Property Group, specialists in making UK property investment easy and accessible for international investors.',
       imageUrl: 'https://i.postimg.cc/HWQNDkXt/Screenshot-2025-10-27-173118.png',
@@ -936,5 +943,3 @@ export default function App() {
     </>
   );
 }
-
-
