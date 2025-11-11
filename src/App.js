@@ -693,6 +693,13 @@ const About = ({ onOpenAiModal }) => (
 // --- All Projects Data ---
 const allProjectsData = [
     {
+      title: 'Care Point Clinic',
+      description: 'A Best Multi Specialty Clinic in their city',
+      imageUrl: 'https://i.postimg.cc/43KYG9cf/Screenshot-2025-11-11-203349.png',
+      liveUrl: 'https://www.behance.net/gallery/235714309/Doctor-Appointment-Telemedicine-Website-UIUX-Design',
+      tags: ['Web Design', 'Behance', 'Healthcare']
+    },
+    {
       title: 'Trevorz Barber Shop',
       description: 'A No #1 Barber Shop in their city.',
       imageUrl: 'https://i.postimg.cc/C5bSyLMF/Screenshot-2025-11-06-010530.png',
